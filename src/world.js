@@ -18,6 +18,7 @@ export function createBuildingFloor() {
     ceilingWhite: P.severeWhite,
     fluorescent: true,
   });
+  corridor.children.forEach((c) => { c.castShadow = true; c.receiveShadow = true; });
   corridor.position.x = -60;
   floor.add(corridor);
 
@@ -79,6 +80,7 @@ function buildCorridor({ length, width, wallWhite, ceilingWhite, fluorescent }) 
       const light = new THREE.PointLight(0xffffff, 0.12, 20, 2);
       light.position.set(i, 2.1, 0);
       light.castShadow = true;
+      light.shadow.bias = -0.0002;
       corridor.add(light);
       // translucent tube mesh for glow (approximation)
       const tube = new THREE.Mesh(
@@ -92,6 +94,10 @@ function buildCorridor({ length, width, wallWhite, ceilingWhite, fluorescent }) 
   return corridor;
 }
 
+function enableShadows(root) {
+  root.traverse((o) => { o.castShadow = true; o.receiveShadow = true; });
+}
+
 function buildMdrCluster({ cells, seatHeight }) {
   // Four cubicles with kelly-green rug underneath (verified)
   const cluster = new THREE.Group('MDR');
@@ -102,6 +108,7 @@ function buildMdrCluster({ cells, seatHeight }) {
   rug.rotation.x = -Math.PI / 2;
   rug.position.set(0, 0.01, 0);
   cluster.add(rug);
+  enableShadows(cluster);
 
   for (let i = 0; i < cells; i++) {
     const px = -5 + i * 2.5;

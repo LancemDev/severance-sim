@@ -4,6 +4,7 @@
 //  - GeneralMode: freeform severance activities (swap worlds, do transitions, spawn people).
 import * as THREE from 'three';
 import { createGlitchCut, spawnElevatorHum, transitionDollyZoom, DING_PITCHES } from './transition.js';
+import { createCharacter, characterKeys, CHARACTER_SPOTS } from './characters.js';
 
 export const STORY_BEATS = [
   { id: 1, title: 'Orientation', desc: 'First day: the Orientation Room tour on the Severance floor.' },
@@ -26,6 +27,25 @@ export function createGame({ scene, world, lighting, floor }) {
     world,
     scene,
     floor,
+  };
+
+  const spawned = new Map();
+  const spawn = (key) => {
+    const ch = createCharacter(key);
+    const spot = CHARACTER_SPOTS[key] || { x: 0, y: 1.5, z: 0 };
+    ch.position.set(spot.x, spot.y, spot.z + 1);
+    ch.castShadow = true;
+    state.scene.add(ch);
+    spawned.set(key, ch);
+    log(`Spawned ${ch.userData.config.name}.`);
+  };
+  const despawn = (key) => {
+    const ch = spawned.get(key);
+    if (ch) { state.scene.remove(ch); spawned.delete(key); }
+  };
+  const toggleSpawn = (key) => {
+    if (spawned.has(key)) { despawn(key); log(`Despawned ${key}.`); }
+    else { spawn(key); }
   };
 
   const log = (msg) => {
@@ -115,5 +135,9 @@ export function createGame({ scene, world, lighting, floor }) {
     update,
     log,
     renderUI,
+    spawn,
+    despawn,
+    toggleSpawn,
+    characterKeys: () => characterKeys(),
   };
 }
