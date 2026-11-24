@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Severance — Web Sim</title>
+    <title>Severance — Lumon Severed Floor</title>
+    <link rel="icon" href="data:," />
     <link rel="stylesheet" href="styles.css" />
     <script type="importmap">
       {
@@ -16,23 +17,55 @@
     </script>
   </head>
   <body>
-    <header>
-      <h1>Severance</h1>
-      <div id="mode-bar">
-        <button id="btn-story" class="active">Story Mode</button>
-        <button id="btn-general">General Mode</button>
+    <header id="topbar">
+      <div class="brand">
+        <div class="brand-mark">L</div>
+        <div class="brand-copy">
+          <span class="eyebrow">Lumon Industries · Branch 501</span>
+          <h1>SEVERANCE</h1>
+        </div>
+      </div>
+      <nav id="mode-bar">
+        <button id="btn-story" class="mode-btn active">Story Mode</button>
+        <button id="btn-general" class="mode-btn">General Mode</button>
+      </nav>
+      <div class="top-actions">
+        <button id="btn-reset-view" class="ghost-btn" title="Return to the MDR view">Reset view</button>
       </div>
     </header>
-    <div id="console"></div>
-    <div id="loading">Booting the Lumon floor…</div>
-    <div id="error-overlay" hidden></div>
-    <div id="story-beats"></div>
-    <div id="controls">
-      <button id="btn-transition">Play Elevator Transition</button>
-      <button id="btn-toggle-world">Toggle Innie / Outie world</button>
-      <button id="btn-toggle-helly">Toggle Helly</button>
-      <div id="world-label" class="mono"></div>
+
+    <aside id="manual">
+      <div class="manual-head">
+        <span class="eyebrow">Orientation</span>
+        <em id="beat-count">01 / 06</em>
+      </div>
+      <div id="story-beats"></div>
+      <button id="btn-next-beat" class="primary-btn">Continue</button>
+    </aside>
+
+    <div id="controls" class="hidden">
+      <button id="btn-transition" class="ghost-btn">Elevator transition</button>
+      <button id="btn-toggle-world" class="ghost-btn">Innie / Outie</button>
+      <button id="btn-toggle-helly" class="ghost-btn">Toggle Helly</button>
+      <span id="world-label" class="mono"></span>
     </div>
+
+    <div id="console">
+      <div class="console-title">Floor log</div>
+      <div id="console-lines"></div>
+    </div>
+
+    <div id="hint">Drag to look · Scroll to zoom</div>
+    <div id="loading">
+      <div class="load-brand">
+        <span class="eyebrow">Lumon Industries</span>
+        <strong>SEVERED FLOOR</strong>
+        <small>BRANCH 501 · ACCESS PENDING</small>
+        <div class="load-bar"><i></i></div>
+      </div>
+    </div>
+    <div id="error-overlay" hidden></div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

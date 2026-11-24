@@ -1,83 +1,114 @@
 // Two modes:
-//  - StoryMode: follows the Severance storyline (real beats from the show: orientation,
-//    descend, MDR floor, tasks, transitions, testing floor, etc.)
-//  - GeneralMode: freeform severance activities (swap worlds, do transitions, spawn people).
+//  - Story: the Season 1 arc, beat by beat.
+//  - General: freeform severed-floor activity.
 import * as THREE from 'three';
-import { createGlitchCut, spawnElevatorHum, transitionDollyZoom, DING_PITCHES } from './transition.js';
 import { createCharacter, characterKeys, CHARACTER_SPOTS } from './characters.js';
+import { createGlitchCut, spawnElevatorHum, transitionDollyZoom, DING_PITCHES } from './transition.js';
 
 export const STORY_BEATS = [
-  { id: 1, title: 'Orientation', desc: 'First day: the Orientation Room tour on the Severance floor.' },
-  { id: 2, title: 'Work shifts', desc: 'Do your jobs: explore the MDR floor, speak with team members.' },
-  { id: 3, title: 'Innies and Outies', desc: 'Learn about the dual-identity structure: work vs personal halves.' },
-  { id: 4, title: 'Overtime Contingency Protocol', desc: 'A single beat where Innies play their Outies for ~39 minutes.' },
-  { id: 5, title: 'Team dynamics', desc: 'Rebellion or cooperation among MDR members.' },
-  { id: 6, title: 'Free play', desc: 'The world is open: wander the Severance floor and explore.' },
+  {
+    id: 1,
+    title: 'Orientation',
+    desc: 'Helly R. wakes on the severed floor. Mark S. walks her through the MDR orientation: who she is in here, and who she is not.',
+  },
+  {
+    id: 2,
+    title: 'Macrodata Refinement',
+    desc: 'Four refiners, four desks, one green carpet. The numbers are scary, and the work is mysterious. Meet Mark, Helly, Irving and Dylan.',
+  },
+  {
+    id: 3,
+    title: 'The Perpetuity Wing',
+    desc: 'Kier Eagan, the Nine, and the Four Tempers: Woe, Frolic, Dread and Malice. Lumon has been taming humanity since 1865.',
+  },
+  {
+    id: 4,
+    title: 'Wellness & the Board',
+    desc: 'Ms. Casey reads the facts. The Break Room waits. Harmony Cobel watches from the outside, and the Board is always listening.',
+  },
+  {
+    id: 5,
+    title: 'Overtime Contingency',
+    desc: 'The innies reach the outside world for thirty-nine minutes. Helly finds a gala. Irving finds Burt. Mark finds a photograph.',
+  },
+  {
+    id: 6,
+    title: 'The Testing Floor',
+    desc: 'Underneath Branch 501: the Exports Hall, the testing rooms, and Cold Harbor. Gemma is alive. The work was never about the numbers.',
+  },
 ];
 
-export function createGame({ scene, world, lighting, floor }) {
+export function createGame({ scene, world, lighting, floor, cast = [] }) {
   const state = {
     mode: 'story',
     storyIndex: 0,
-    severMode: 'severed', // 'severed' | 'outie'
-    transitionPending: 0,
-    nextBeatAt: performance.now() + 300,
+    severMode: 'severed',
     events: [],
-    easterEggs: [],
     world,
     scene,
     floor,
+    cast,
+    location: 'mdr',
   };
 
   const spawned = new Map();
   const spawn = (key) => {
     const ch = createCharacter(key);
-    const spot = CHARACTER_SPOTS[key] || { x: 0, y: 1.5, z: 0 };
-    ch.position.set(spot.x, spot.y, spot.z + 1);
-    ch.castShadow = true;
+    const spot = CHARACTER_SPOTS[key] || { x: 0, y: 0, z: 1.5, rotY: Math.PI };
+    ch.position.set(spot.x, spot.y ?? 0, spot.z);
+    ch.rotation.y = spot.rotY ?? 0;
     state.scene.add(ch);
     spawned.set(key, ch);
-    log(`Spawned ${ch.userData.config.name}.`);
+    log(`Spawned ${ch.userData.config?.name || key}.`);
   };
   const despawn = (key) => {
     const ch = spawned.get(key);
-    if (ch) { state.scene.remove(ch); spawned.delete(key); }
+    if (ch) {
+      state.scene.remove(ch);
+      spawned.delete(key);
+    }
   };
   const toggleSpawn = (key) => {
-    if (spawned.has(key)) { despawn(key); log(`Despawned ${key}.`); }
-    else { spawn(key); }
-  };
-
-  const log = (msg) => {
-    state.events.push({ t: performance.now(), msg });
-    const el = document.getElementById('console');
-    if (el) {
-      const line = document.createElement('div');
-      line.className = 'console-line';
-      line.textContent = msg;
-      el.prepend(line);
-      if (el.children.length > 14) el.removeChild(el.lastChild);
+    if (spawned.has(key)) {
+      despawn(key);
+      log(`Despawned ${key}.`);
+    } else {
+      spawn(key);
     }
   };
 
+  const consoleLines = () => document.getElementById('console-lines');
+  const log = (msg) => {
+    state.events.push({ t: performance.now(), msg });
+    const el = consoleLines();
+    if (!el) return;
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    line.textContent = msg;
+    el.prepend(line);
+    while (el.children.length > 8) el.removeChild(el.lastChild);
+  };
+
   const doTransition = (toWorld, label) => {
-    // Verified: dolly zoom + glitch cuts while switching between worlds.
-    transitionDollyZoom({ camera: state.camera, onTick: () => {} });
+    if (state.camera) transitionDollyZoom({ camera: state.camera, onTick: () => {} });
     createGlitchCut();
     const hum = spawnElevatorHum({ scene: state.scene });
     state.severMode = toWorld;
-    log(`Transition ${label}: → ${toWorld.charAt(0).toUpperCase() + toWorld.slice(1)} world. (DING ${DING_PITCHES[Math.floor(Math.random() * DING_PITCHES.length)]})`);
-    setTimeout(hum.remove, 150);
+    log(
+      `${label}: → ${toWorld.charAt(0).toUpperCase() + toWorld.slice(1)} world. ` +
+        `DING ${DING_PITCHES[Math.floor(Math.random() * DING_PITCHES.length)]}.`
+    );
+    setTimeout(hum.remove, 180);
+    renderUI();
   };
 
   const setMode = (mode) => {
     state.mode = mode;
     if (mode === 'story') {
       state.storyIndex = 0;
-      state.nextBeatAt = performance.now() + 300;
       advanceStory();
     } else {
-      log('General Mode: freeform severance activities (spawn people, transitions, wanders).');
+      log('General Mode — freeform severed-floor activity. Spawn staff, run transitions, explore.');
     }
     renderUI();
   };
@@ -85,46 +116,69 @@ export function createGame({ scene, world, lighting, floor }) {
   const advanceStory = () => {
     if (state.mode !== 'story') return;
     const beat = STORY_BEATS[state.storyIndex];
-    if (!beat) { log('Story complete — freeplay your Severance experience!'); return; }
-    log(`[Beat ${beat.id}/${STORY_BEATS.length}] ${beat.title} — ${beat.desc}`);
+    if (!beat) {
+      log('Orientation complete. The floor is yours.');
+      renderUI();
+      return;
+    }
+    log(`${String(beat.id).padStart(2, '0')} — ${beat.title}. ${beat.desc}`);
     state.storyIndex += 1;
-    if (beat.id === 3) doTransition('severed', 'to the Severed Floor');
-    if (beat.id === 5) doTransition('severed', 'through the elevator');
+    renderUI();
   };
 
-  function setCamera(camera) { state.camera = camera; }
+  const setCamera = (camera) => {
+    state.camera = camera;
+  };
 
-  function update(dt) {
+  const update = () => {
     if (lighting.update) lighting.update(performance.now() / 1000);
-    state.events = state.events.filter((e) => performance.now() - e.t < 5000);
-    if (state.mode === 'story' && performance.now() >= state.nextBeatAt) {
-      state.nextBeatAt = performance.now() + 1500;
-      advanceStory();
-    }
-  }
+    state.events = state.events.filter((e) => performance.now() - e.t < 6000);
+  };
 
-  function renderUI() {
+  const renderUI = () => {
     const btnStory = document.getElementById('btn-story');
     const btnGeneral = document.getElementById('btn-general');
     const beats = document.getElementById('story-beats');
     const controls = document.getElementById('controls');
-    if (btnStory && state.mode === 'story') btnStory.classList.add('active');
-    if (btnStory && state.mode !== 'story') btnStory.classList.remove('active');
-    if (btnGeneral && state.mode === 'general') btnGeneral.classList.add('active');
-    if (btnGeneral && state.mode !== 'general') btnGeneral.classList.remove('active');
-    if (controls) controls.classList.toggle('hidden', state.mode !== 'general');
+    const count = document.getElementById('beat-count');
+    const next = document.getElementById('btn-next-beat');
+
+    btnStory?.classList.toggle('active', state.mode === 'story');
+    btnGeneral?.classList.toggle('active', state.mode === 'general');
+    controls?.classList.toggle('hidden', state.mode !== 'general');
+    document.body.classList.toggle('mode-story', state.mode === 'story');
+    document.body.classList.toggle('mode-general', state.mode === 'general');
+
     if (beats) {
       beats.innerHTML = '';
       STORY_BEATS.forEach((b) => {
-        const d = document.createElement('div');
-        d.className = `beat ${state.mode === 'story' && state.storyIndex >= b.id ? 'done' : ''}`;
-        d.textContent = `${b.id}. ${b.title}`;
-        beats.appendChild(d);
+        const row = document.createElement('div');
+        const done = state.mode === 'story' && b.id < state.storyIndex;
+        const current = state.mode === 'story' && b.id === state.storyIndex;
+        row.className = `beat${done ? ' done' : ''}${current ? ' current' : ''}`;
+        const n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = done ? '✓' : String(b.id).padStart(2, '0');
+        const label = document.createElement('span');
+        label.textContent = b.title;
+        row.append(n, label);
+        beats.appendChild(row);
       });
     }
+    if (count) {
+      const shown = Math.min(state.storyIndex, STORY_BEATS.length);
+      count.textContent = `${String(shown).padStart(2, '0')} / ${String(STORY_BEATS.length).padStart(2, '0')}`;
+    }
+    if (next) {
+      next.hidden = state.mode !== 'story' || state.storyIndex >= STORY_BEATS.length;
+      next.textContent = state.storyIndex >= STORY_BEATS.length - 1 ? 'Finish orientation' : 'Continue';
+    }
     const label = document.getElementById('world-label');
-    if (label) label.textContent = state.severMode.toUpperCase() + ' world';
-  }
+    if (label) label.textContent = `${state.severMode.toUpperCase()} WORLD · MDR`;
+  };
+
+  // manual beat progression
+  document.getElementById('btn-next-beat')?.addEventListener('click', () => advanceStory());
 
   return {
     state,

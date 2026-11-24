@@ -1,45 +1,42 @@
-// Palette & color story for Severance, from verified sources (AD "Blue and Red"
-// color story, DesignObserver "Innies see red, Innies wear blue").
+// Palette & colour story for Severance.
+// MDR set values sampled from episode frames, with the show's cool grade in mind.
 export const palette = {
-  // --- Innie (Severed) floor: near-white "pure white" feel.
-  // AD measured ~50 whites on a projector before settling; values approximate.
-  severeWhite: '#F3F5F7',
-  severeWhiteAlt: '#E8E9E1',
+  // --- Innie (severed) floor: near-white institutional surfaces.
+  severeWhite: '#eef2ef',
+  severeWhiteAlt: '#f3f6f3',
+  corridorWhite: '#e8efea',
+  ceilingWhite: '#f1f5f2',
 
-  // --- White surroundings (corridors, cubicle walls in some rooms)
-  corridorWhite: '#E9EAEF',
+  // --- The MDR carpet and workstation greens (sampled #6fa977 / #294535).
+  carpetGreen: '#6fa977',
+  wallGreen: '#294535',
+  forest: '#2c4a3a',
+  emerald: '#2b6b55',
+  indigo: '#263e5c',
+  cobalt: '#2c4b74',
+  royal: '#3d5f88',
 
-  // --- Green & blue story on the severance floor
-  // Verified: forest and emerald greens run the carpets/cubicle walls; MDR rug is kelly green.
-  wallGreen: '#7FB565',
-  forest: '#3E6950',
-  emerald: '#2B937C',
-  indigo: '#1A3A5C',
-  cobalt: '#1A4E7C',
-  royal: '#4A6F8A',
+  // --- Trim / metal / institutional detail.
+  trimDark: '#39474a',
+  trimMetal: '#5c6a6c',
+  monitorBeige: '#d8d2bf',
+  phoneBlue: '#273e5e',
+  chairBlack: '#252a2c',
 
-  // --- Warm "red world" accents (Innie/Outie story). Verified to exist,
-  // plus DesignObserver calls red the color of liberation/love/rebellion.
-  redAccent: '#D92C26',
-  offWhite: '#F6EBE5',
-  paleYellow: '#E8DCC9', // pop color seen on Dylan/Helly (approx)
+  // --- Warm "outie" accents and story colours.
+  redAccent: '#c63a30',
+  offWhite: '#f6efe6',
+  paleYellow: '#e4d3a4',
+  outieTan: '#e2d1c3',
 
-  // --- Outie (Personal) world: warm tones, warm shadows (AD Ben & Aja Blanc lighting style)
-  outieTan: '#E2D1C3',
-
-  // --- Testing Floor: hospital green
-  testingGreen: '#B9DCCB',
-
-  // --- Alerts: red-ish (season 2 style)
-  alertRed: '#E53935',
+  // --- Testing Floor: hospital green.
+  testingGreen: '#b9dccb',
+  alertRed: '#e53935',
 };
 
 export const mdrTeamPalette = {
-  // Verified-ish palettes used in the show (via DesignObserver & AD screenshots).
-  // Innies: blue uniform top + blue skirt, but pops of pale yellow.
-  markSuit: { top: palette.cobalt, skirt: palette.cobalt, tie: palette.redAccent },
-  hellySuit: { top: palette.royal, skirt: palette.royal, hair: palette.paleYellow },
-  irvingSuit: { top: palette.indigo, skirt: palette.indigo },
-  waldoSuit: { top: palette.forest, skirt: palette.forest },
-  xSuit: { top: palette.emerald, skirt: palette.emerald },
+  markSuit: { top: palette.cobalt, skirt: palette.indigo, tie: '#4f78a8' },
+  hellySuit: { top: palette.wallGreen, skirt: palette.royal, hair: '#a23b2a' },
+  irvingSuit: { top: palette.paleYellow, skirt: palette.chairBlack, tie: '#3f5e7a' },
+  dylanSuit: { top: palette.severeWhiteAlt, skirt: palette.chairBlack, tie: '#1f2426' },
 };

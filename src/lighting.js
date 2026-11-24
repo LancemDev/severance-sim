@@ -1,57 +1,73 @@
-// Lighting rigs for the two Severance worlds (verified from research).
+// Lighting for the severed floor: cool, even, institutional white with a
+// green carpet bounce. Rect-area ceiling panels + one soft shadow caster.
 import * as THREE from 'three';
-import { palette as P } from './palette.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
-// Severance floor: "retina-frying sterile white" + motion-sensor dimming + red alerts.
-export function createSevereLighting({ room, width = 120, height = 2.2 }) {
-  const severe = new THREE.Group('severe_lighting');
+export function createSevereLighting({ width = 24, depth = 20, height = 3.9 } = {}) {
+  RectAreaLightUniformsLib.init();
 
-  // --- Ceiling panel lights with a "motion-sensor activated" pulse (approximation).
-  const lights = [];
-  for (let x = -width / 2; x <= width / 2; x += width / 10) {
-    const pl = new THREE.PointLight(P.severeWhite, 1.2, 12);
-    pl.position.set(x, height + 0.5, 0);
-    pl.castShadow = true;
-    severe.add(pl);
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(width / 12, 0.3),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 })
-    );
-    plane.position.copy(pl.position);
-    severe.add(plane);
-    lights.push({ pl, plane, base: pl.intensity });
+  const group = new THREE.Group('severe_lighting');
+
+  // cool white skylight + green floor bounce
+  const hemi = new THREE.HemisphereLight(0xecf7f3, 0x6f947c, 0.82);
+  group.add(hemi);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.12);
+  group.add(ambient);
+
+  // single soft key for contact shadows and modelling
+  const key = new THREE.DirectionalLight(0xf7fffc, 1.05);
+  key.position.set(6, 10, 8);
+  key.target.position.set(0, 0, 0);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -14;
+  key.shadow.camera.right = 14;
+  key.shadow.camera.top = 13;
+  key.shadow.camera.bottom = -13;
+  key.shadow.camera.near = 1;
+  key.shadow.camera.far = 34;
+  key.shadow.bias = -0.00035;
+  key.shadow.normalBias = 0.025;
+  key.shadow.radius = 3.5;
+  group.add(key);
+  group.add(key.target);
+
+  // recessed ceiling panels (no shadows, but lovely soft falloff on desks)
+  const panels = [];
+  for (const x of [-8, 0, 8]) {
+    for (const z of [-5.5, 5.5]) {
+      const panel = new THREE.RectAreaLight(0xf1faff, 2.7, 1.86, 0.92);
+      panel.position.set(x, height - 0.14, z);
+      panel.lookAt(x, 0, z);
+      group.add(panel);
+      panels.push(panel);
+    }
   }
 
-  // --- Warm key light on the worker's desk (approximation of the outie's warm lighting style).
-  const warmKey = new THREE.PointLight(P.outieTan, 0.6, 15);
-  warmKey.position.set(0, 0.8, 0);
-  warmKey.castShadow = true;
-  severe.add(warmKey);
+  // gentle frontal fill so faces never go muddy
+  const fill = new THREE.DirectionalLight(0xe4efeb, 0.25);
+  fill.position.set(-5, 4, 12);
+  group.add(fill);
+
+  // dim upward bounce so the coffered ceiling reads with depth
+  const ceilingFill = new THREE.DirectionalLight(0xdcece5, 0.45);
+  ceilingFill.position.set(1, -1, 5);
+  ceilingFill.target.position.set(0, height, 0);
+  group.add(ceilingFill);
+  group.add(ceilingFill.target);
 
   return {
-    group: severe,
-    lights,
-    update(time) {
-      for (const { pl, plane, base } of lights) {
-        const pulse = 0.15 + 0.85 * (0.5 + 0.5 * Math.sin(time * 1.3 + pl.position.x));
-        pl.intensity = base * pulse;
-        plane.material.opacity = 0.05 * pulse;
-      }
-    },
+    group,
+    key,
+    panels,
+    update() {},
     dispose() {
-      for (const { pl } of lights) severe.remove(pl);
-      severe.remove(warmKey);
+      hemi.dispose?.();
+      ambient.dispose?.();
+      key.dispose?.();
+      fill.dispose?.();
+      for (const p of panels) p.dispose?.();
     },
   };
-}
-
-// Outie/Personal world: warm light (Ben & Aja Blanc style), softer and golden.
-export function createOutieLighting({ room }) {
-  const outie = new THREE.Group('outie_lighting');
-  const fill = new THREE.HemisphereLight(P.outieTan, 0x2a2f3a, 1.1);
-  outie.add(fill);
-  const sun = new THREE.DirectionalLight(P.outieTan, 0.8);
-  sun.position.set(30, 60, 40);
-  outie.add(sun);
-  return { group: outie, dispose() { outie.remove(fill); outie.remove(sun); } };
 }

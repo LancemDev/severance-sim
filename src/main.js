@@ -1,13 +1,13 @@
-// Engine entry: scene, camera, controls, world, lighting, characters, game loop.
+// Engine entry: renderer, camera, controls, world, lighting, cast, game loop.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-import { createBuildingFloor } from './world.js';
+import { createBuildingFloor, MDR } from './world.js';
 import { createSevereLighting } from './lighting.js';
 import { createCharacter, characterKeys, CHARACTER_SPOTS } from './characters.js';
 import { createGame } from './modes.js';
 
-// --- Surface runtime errors on the page instead of an empty black screen.
 function showError(message) {
   const el = document.getElementById('error-overlay');
   if (!el) return;
@@ -27,47 +27,71 @@ try {
 
 function start() {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0e0e10);
+  scene.background = new THREE.Color(0xdde7e0);
+  scene.fog = new THREE.Fog(0xdde7e0, 26, 55);
 
-  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
-  camera.position.set(0, 2.2, 8.5);
+  const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.05, 120);
+  camera.position.set(0, 1.62, 6.7);
   scene.add(camera);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
   document.body.appendChild(renderer.domElement);
 
+  // Neutral studio reflections so laminate/metal read as real materials.
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envTex = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+  scene.environment = envTex;
+  scene.environmentIntensity = 0.38;
+  pmrem.dispose();
+
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 1.2, 0);
+  controls.target.set(0, 1.06, 0);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 3;
-  controls.maxDistance = 16;
-  controls.maxPolarAngle = Math.PI / 2.05;
+  controls.dampingFactor = 0.075;
+  controls.enablePan = false;
+  controls.minDistance = 3.4;
+  controls.maxDistance = 7.6;
+  controls.minPolarAngle = 1.28;
+  controls.maxPolarAngle = 1.53;
+  controls.rotateSpeed = 0.55;
+  controls.zoomSpeed = 0.7;
   controls.update();
 
   const world = createBuildingFloor();
   scene.add(world);
 
-  const lighting = createSevereLighting({ width: 30, height: 2.4 });
+  const lighting = createSevereLighting({
+    width: MDR.width,
+    depth: MDR.depth,
+    height: MDR.height,
+  });
   scene.add(lighting.group);
 
-  const characters = characterKeys().map((key) => {
-    const ch = createCharacter(key);
-    const spot = CHARACTER_SPOTS[key];
-    ch.position.set(spot.x, spot.y, spot.z);
-    scene.add(ch);
-    return ch;
-  });
+  const showCharacters = !new URLSearchParams(location.search).has('nochars');
+  const cast = [];
+  if (showCharacters) {
+    for (const key of characterKeys()) {
+      const ch = createCharacter(key);
+      const spot = CHARACTER_SPOTS[key];
+      if (!spot) continue;
+      ch.position.set(spot.x, spot.y ?? 0, spot.z);
+      ch.rotation.y = spot.rotY ?? 0;
+      scene.add(ch);
+      cast.push(ch);
+    }
+  }
 
-  const game = createGame({ scene, world, lighting, floor: world });
+  const game = createGame({ scene, world, lighting, floor: world, cast });
   game.setCamera(camera);
-  game.renderUI();
+  game.setMode('story');
 
-  // Mode + control wiring
   document.getElementById('btn-story').addEventListener('click', () => game.setMode('story'));
   document.getElementById('btn-general').addEventListener('click', () => game.setMode('general'));
 
@@ -90,10 +114,21 @@ function start() {
   const btnHelly = document.getElementById('btn-toggle-helly');
   if (btnHelly) btnHelly.addEventListener('click', () => game.toggleSpawn('helly'));
 
+  // reset view
+  document.getElementById('btn-reset-view')?.addEventListener('click', () => {
+    camera.position.set(0, 1.62, 6.7);
+    controls.target.set(0, 1.06, 0);
+    controls.update();
+  });
+
+  const clock = new THREE.Clock();
   let firstFrame = true;
   renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.elapsedTime;
     controls.update();
-    game.update(0);
+    for (const ch of cast) ch.userData.animate?.(t, dt);
+    game.update(dt);
     renderer.render(scene, camera);
     if (firstFrame) {
       firstFrame = false;
