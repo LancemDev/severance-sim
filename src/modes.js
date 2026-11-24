@@ -87,10 +87,12 @@ export function createGame({ scene, world, lighting, floor }) {
     const btnStory = document.getElementById('btn-story');
     const btnGeneral = document.getElementById('btn-general');
     const beats = document.getElementById('story-beats');
+    const controls = document.getElementById('controls');
     if (btnStory && state.mode === 'story') btnStory.classList.add('active');
     if (btnStory && state.mode !== 'story') btnStory.classList.remove('active');
     if (btnGeneral && state.mode === 'general') btnGeneral.classList.add('active');
     if (btnGeneral && state.mode !== 'general') btnGeneral.classList.remove('active');
+    if (controls) controls.classList.toggle('hidden', state.mode !== 'general');
     if (beats) {
       beats.innerHTML = '';
       STORY_BEATS.forEach((b) => {
@@ -100,6 +102,8 @@ export function createGame({ scene, world, lighting, floor }) {
         beats.appendChild(d);
       });
     }
+    const label = document.getElementById('world-label');
+    if (label) label.textContent = state.severMode.toUpperCase() + ' world';
   }
 
   return {

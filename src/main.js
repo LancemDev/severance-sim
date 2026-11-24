@@ -38,6 +38,27 @@ const characters = characterKeys().map((key) => {
 
 const game = createGame({ scene, world, lighting, floor: world });
 game.setCamera(camera);
+game.renderUI();
+
+// Mode + control wiring
+document.getElementById('btn-story').addEventListener('click', () => game.setMode('story'));
+document.getElementById('btn-general').addEventListener('click', () => game.setMode('general'));
+
+const btnTransition = document.getElementById('btn-transition');
+if (btnTransition) {
+  btnTransition.addEventListener('click', () =>
+    game.doTransition(game.state.severMode === 'severed' ? 'outie' : 'severed', 'the Dingle')
+  );
+}
+
+const btnToggle = document.getElementById('btn-toggle-world');
+if (btnToggle) {
+  btnToggle.addEventListener('click', () => {
+    game.state.severMode = game.state.severMode === 'severed' ? 'outie' : 'severed';
+    game.renderUI();
+    game.log(`World toggled to ${game.state.severMode}.`);
+  });
+}
 
 // Simple player pointer: orbit around center via mouse
 renderer.setAnimationLoop(() => {
