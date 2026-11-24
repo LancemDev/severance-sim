@@ -1,0 +1,62 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  z-index: 10;
+}
+#mode-bar button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#mode-bar button.active { background: rgba(255, 255, 255, 0.22); font-weight: 600; }
+#story-beats {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#story-beats .beat {
+  background: rgba(255, 255, 255, 0.06);
+  color: #eee;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+#story-beats .beat.done { color: #8fd8a6; opacity: 1; }
+#console {
+  position: fixed;
+  right: 16px;
+  top: 70px;
+  max-height: 320px;
+  overflow-y: auto;
+  max-width: 320px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #cfcfcf;
+  font-size: 12px;
+  border-radius: 4px;
+}
+#console .console-line { white-space: nowrap; }
